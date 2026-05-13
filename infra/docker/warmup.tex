@@ -1,0 +1,34 @@
+% Pre-warm packages commonly used in real LaTeX projects so the first user
+% compilation doesn't pay the CTAN download cost. Build-time only.
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\begin{document}
+\section{Warmup}
+This file forces \texttt{tectonic} to download and cache the packages above.
+
+A bit of math: $e^{i\pi} + 1 = 0$.
+
+\begin{align}
+  \int_0^{1} x^2\,dx &= \tfrac{1}{3}.
+\end{align}
+
+\begin{tikzpicture}
+  \draw (0,0) -- (1,1);
+\end{tikzpicture}
+
+\end{document}
