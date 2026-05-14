@@ -108,6 +108,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
                 aria-pressed={s.autoCompile}
               />
             </div>
+            <div className="settings-row">
+              <span className="row-label">Autocompletado</span>
+              <button
+                className={'toggle-pill' + (s.autocompleteEnabled ? ' is-on' : '')}
+                onClick={() => s.set('autocompleteEnabled', !s.autocompleteEnabled)}
+                aria-pressed={s.autocompleteEnabled}
+              />
+            </div>
           </section>
 
           <section className="settings-section">

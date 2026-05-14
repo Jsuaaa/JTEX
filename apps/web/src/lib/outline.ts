@@ -88,7 +88,7 @@ function walk(
   }
 }
 
-function stripComment(line: string): string {
+export function stripComment(line: string): string {
   let result = '';
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];

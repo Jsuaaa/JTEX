@@ -15,6 +15,7 @@ export type SettingsStore = {
   showLineNumbers: boolean;
   autoCompile: boolean;
   rememberProject: boolean;
+  autocompleteEnabled: boolean;
 
   set: <K extends keyof Omit<SettingsStore, 'set'>>(key: K, value: SettingsStore[K]) => void;
 };
@@ -30,6 +31,7 @@ export const useSettings = create<SettingsStore>()(
       showLineNumbers: true,
       autoCompile: false,
       rememberProject: false,
+      autocompleteEnabled: true,
       set: (key, value) => set({ [key]: value } as Partial<SettingsStore>),
     }),
     {

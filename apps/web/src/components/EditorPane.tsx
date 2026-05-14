@@ -11,8 +11,9 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { StreamLanguage } from '@codemirror/language';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
-import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
+import { completionKeymap } from '@codemirror/autocomplete';
 import { searchKeymap } from '@codemirror/search';
+import { latexCompletions } from '../editor/completions';
 import {
   Bold,
   Code,
@@ -68,10 +69,11 @@ export function EditorPane() {
       <EditorTabs />
       <EditorToolbar viewRef={viewRefForActive} />
       <CodeMirrorHost
-        key={project.activeFile}
+        key={`${project.activeFile}:${settings.autocompleteEnabled ? '1' : '0'}`}
         value={file.content}
         path={project.activeFile}
         showLineNumbers={settings.showLineNumbers}
+        autocompleteEnabled={settings.autocompleteEnabled}
         onChange={(v) => useProject.getState().writeFile(file.path, v)}
       />
     </section>
@@ -115,10 +117,17 @@ type CMHostProps = {
   value: string;
   path: string;
   showLineNumbers: boolean;
+  autocompleteEnabled: boolean;
   onChange: (v: string) => void;
 };
 
-function CodeMirrorHost({ value, path, showLineNumbers, onChange }: CMHostProps) {
+function CodeMirrorHost({
+  value,
+  path,
+  showLineNumbers,
+  autocompleteEnabled,
+  onChange,
+}: CMHostProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const pendingCursorMove = useProject((s) => s.pendingCursorMove);
@@ -133,7 +142,7 @@ function CodeMirrorHost({ value, path, showLineNumbers, onChange }: CMHostProps)
       StreamLanguage.define(stex),
       jtexTheme,
       jtexHighlightExt,
-      autocompletion(),
+      ...(autocompleteEnabled ? [latexCompletions()] : []),
       keymap.of([
         ...defaultKeymap,
         ...historyKeymap,
