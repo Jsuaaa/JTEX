@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Prec } from '@codemirror/state';
 import {
   EditorView,
   keymap,
@@ -11,7 +11,7 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { StreamLanguage } from '@codemirror/language';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
-import { completionKeymap } from '@codemirror/autocomplete';
+import { acceptCompletion, completionKeymap } from '@codemirror/autocomplete';
 import { searchKeymap } from '@codemirror/search';
 import { latexCompletions } from '../editor/completions';
 import {
@@ -143,10 +143,15 @@ function CodeMirrorHost({
       jtexTheme,
       jtexHighlightExt,
       ...(autocompleteEnabled ? [latexCompletions()] : []),
+      Prec.highest(
+        keymap.of([
+          { key: 'Tab', run: acceptCompletion },
+          ...completionKeymap,
+        ]),
+      ),
       keymap.of([
         ...defaultKeymap,
         ...historyKeymap,
-        ...completionKeymap,
         ...searchKeymap,
         indentWithTab,
       ]),
