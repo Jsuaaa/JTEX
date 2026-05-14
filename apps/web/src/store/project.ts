@@ -14,6 +14,8 @@ export type CompileState =
   | { status: 'invalid'; reason: string }
   | { status: 'network_error'; reason: string };
 
+export type CursorMove = { file: string; line: number; seq: number };
+
 export type ProjectStore = {
   name: string;
   entryFile: string | null;
@@ -23,6 +25,7 @@ export type ProjectStore = {
   activeFile: string | null;
   compile: CompileState;
   lastSavedAt: number | null;
+  pendingCursorMove: CursorMove | null;
 
   loadProject: (input: { name: string; files: FileEntry[]; entryFile?: string | null }) => void;
   reset: () => void;
@@ -35,6 +38,8 @@ export type ProjectStore = {
   setEntryFile: (path: string) => void;
   setEngine: (engine: Engine) => void;
   setCompile: (state: CompileState) => void;
+  requestCursorMove: (file: string, line: number) => void;
+  consumePendingCursorMove: (seq: number) => void;
 };
 
 const initial = {
@@ -46,7 +51,10 @@ const initial = {
   activeFile: null as string | null,
   compile: { status: 'idle' } as CompileState,
   lastSavedAt: null as number | null,
+  pendingCursorMove: null as CursorMove | null,
 };
+
+let cursorMoveSeq = 0;
 
 export const useProject = create<ProjectStore>((set, get) => ({
   ...initial,
@@ -109,6 +117,16 @@ export const useProject = create<ProjectStore>((set, get) => ({
   setEntryFile: (path) => set({ entryFile: path }),
   setEngine: (engine) => set({ engine }),
   setCompile: (compile) => set({ compile }),
+
+  requestCursorMove: (file, line) => {
+    cursorMoveSeq += 1;
+    set({ pendingCursorMove: { file, line, seq: cursorMoveSeq } });
+  },
+
+  consumePendingCursorMove: (seq) => {
+    const current = get().pendingCursorMove;
+    if (current && current.seq === seq) set({ pendingCursorMove: null });
+  },
 }));
 
 function detectEntry(files: FileEntry[]): string | null {

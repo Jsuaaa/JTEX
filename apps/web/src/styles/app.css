@@ -384,6 +384,14 @@
 .out-row:hover {
   background: var(--bg-hover);
 }
+.out-row:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--accent) 70%, transparent);
+  outline-offset: 1px;
+}
+.out-row.is-active {
+  background: color-mix(in oklch, var(--accent) 10%, transparent);
+  color: var(--text-strong);
+}
 .out-lvl-1 {
   padding-left: 6px;
   font-weight: 500;

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Prec } from '@codemirror/state';
 import {
   EditorView,
   keymap,
@@ -11,8 +11,9 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { StreamLanguage } from '@codemirror/language';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
-import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
+import { acceptCompletion, completionKeymap } from '@codemirror/autocomplete';
 import { searchKeymap } from '@codemirror/search';
+import { latexCompletions } from '../editor/completions';
 import {
   Bold,
   Code,
@@ -68,10 +69,11 @@ export function EditorPane() {
       <EditorTabs />
       <EditorToolbar viewRef={viewRefForActive} />
       <CodeMirrorHost
-        key={project.activeFile}
+        key={`${project.activeFile}:${settings.autocompleteEnabled ? '1' : '0'}`}
         value={file.content}
         path={project.activeFile}
         showLineNumbers={settings.showLineNumbers}
+        autocompleteEnabled={settings.autocompleteEnabled}
         onChange={(v) => useProject.getState().writeFile(file.path, v)}
       />
     </section>
@@ -115,12 +117,20 @@ type CMHostProps = {
   value: string;
   path: string;
   showLineNumbers: boolean;
+  autocompleteEnabled: boolean;
   onChange: (v: string) => void;
 };
 
-function CodeMirrorHost({ value, showLineNumbers, onChange }: CMHostProps) {
+function CodeMirrorHost({
+  value,
+  path,
+  showLineNumbers,
+  autocompleteEnabled,
+  onChange,
+}: CMHostProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const pendingCursorMove = useProject((s) => s.pendingCursorMove);
 
   useEffect(() => {
     if (!hostRef.current) return;
@@ -132,11 +142,16 @@ function CodeMirrorHost({ value, showLineNumbers, onChange }: CMHostProps) {
       StreamLanguage.define(stex),
       jtexTheme,
       jtexHighlightExt,
-      autocompletion(),
+      ...(autocompleteEnabled ? [latexCompletions()] : []),
+      Prec.highest(
+        keymap.of([
+          { key: 'Tab', run: acceptCompletion },
+          ...completionKeymap,
+        ]),
+      ),
       keymap.of([
         ...defaultKeymap,
         ...historyKeymap,
-        ...completionKeymap,
         ...searchKeymap,
         indentWithTab,
       ]),
@@ -165,6 +180,22 @@ function CodeMirrorHost({ value, showLineNumbers, onChange }: CMHostProps) {
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
     }
   }, [value]);
+
+  useEffect(() => {
+    if (!pendingCursorMove) return;
+    if (pendingCursorMove.file !== path) return;
+    const view = viewRef.current;
+    if (!view) return;
+    const totalLines = view.state.doc.lines;
+    const targetLine = Math.max(1, Math.min(pendingCursorMove.line, totalLines));
+    const pos = view.state.doc.line(targetLine).from;
+    view.dispatch({
+      selection: { anchor: pos },
+      effects: EditorView.scrollIntoView(pos, { y: 'center' }),
+    });
+    view.focus();
+    useProject.getState().consumePendingCursorMove(pendingCursorMove.seq);
+  }, [pendingCursorMove, path]);
 
   return <div ref={hostRef} className="editor-cm" />;
 }

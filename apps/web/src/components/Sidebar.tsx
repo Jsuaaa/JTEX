@@ -144,23 +144,48 @@ function FilesTab() {
 }
 
 function OutlineTab() {
-  const active = useProject((s) => s.activeFile);
-  const file = useProject((s) => (active ? s.files.get(active) : null));
+  const files = useProject((s) => s.files);
+  const entryFile = useProject((s) => s.entryFile);
+  const activeFile = useProject((s) => s.activeFile);
+  const root = entryFile ?? activeFile;
+
   const outline = useMemo(() => {
-    if (!file || file.kind !== 'text') return [];
-    return parseOutline(file.content);
-  }, [file]);
+    if (!root) return [];
+    const entry = files.get(root);
+    if (!entry || entry.kind !== 'text') return [];
+    return parseOutline(files, root);
+  }, [files, root]);
+
+  const go = (file: string, line: number) => {
+    useProject.getState().openFile(file);
+    useProject.getState().requestCursorMove(file, line);
+  };
 
   return (
     <div className="side-body">
       {outline.length === 0 ? (
         <div style={{ color: 'var(--muted)', fontSize: 12, padding: 8 }}>
-          No hay secciones en el archivo activo.
+          No hay secciones en el proyecto.
         </div>
       ) : (
         <ul className="outline">
           {outline.map((o, i) => (
-            <li key={i} className={`out-row out-lvl-${o.level}`}>
+            <li
+              key={`${o.file}:${o.line}:${i}`}
+              className={
+                `out-row out-lvl-${o.level}` + (o.file === activeFile ? ' is-active' : '')
+              }
+              role="button"
+              tabIndex={0}
+              title={`${o.file}:${o.line}`}
+              onClick={() => go(o.file, o.line)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  go(o.file, o.line);
+                }
+              }}
+            >
               <span className="out-label">{o.label}</span>
               <span className="out-line">L{o.line}</span>
             </li>
