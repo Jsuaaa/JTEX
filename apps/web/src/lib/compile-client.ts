@@ -1,4 +1,9 @@
-import type { Engine, CompileErrorBody, CompileTimeoutBody, CompileInvalidBody } from '@jtex/shared';
+import type {
+  Engine,
+  CompileErrorBody,
+  CompileTimeoutBody,
+  CompileInvalidBody,
+} from '@jtex/shared';
 import { parseMultipartMixed } from './multipart-parser';
 import { zipProject } from './zip';
 import type { FileEntry } from '../store/project';
@@ -44,7 +49,10 @@ export async function compileProject(input: {
       const { pdf, log } = await parseMultipartMixed(res);
       return { status: 'success', pdf, log, durationMs };
     } catch (err) {
-      return { status: 'network_error', reason: err instanceof Error ? err.message : 'parse error' };
+      return {
+        status: 'network_error',
+        reason: err instanceof Error ? err.message : 'parse error',
+      };
     }
   }
 

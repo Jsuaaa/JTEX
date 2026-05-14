@@ -59,6 +59,7 @@ Container restart → /tmp se vuela entero (es tmpfs). Cero residuos.
 ```
 
 **Propiedades del sistema:**
+
 - **Stateless puro:** la VPS no guarda nada del usuario en disco persistente.
 - **Privado por default:** ningún archivo del usuario sobrevive al final del request HTTP.
 - **Resiliente:** si Coolify reinicia el container, no hay datos que recuperar.
@@ -91,46 +92,56 @@ Container restart → /tmp se vuela entero (es tmpfs). Cero residuos.
 ## 3. Decisiones por componente
 
 ### 3.1 Frontend framework
+
 **[ELEGIDA] Vite + React + TypeScript.** Misma justificación que antes (SPA pura, deploy estático). Sin cambios.
 
 ### 3.2 Editor de código
+
 **[ELEGIDA] CodeMirror 6** con `@codemirror/legacy-modes/mode/stex`. Sin cambios.
 
 ### 3.3 Renderizado de PDF
+
 **[ELEGIDA] pdfjs-dist** directo, wrapper React mínimo propio. Sin cambios.
 
 ### 3.4 Compilación LaTeX
 
-| Opción | Trade-off |
-|---|---|
+| Opción                                             | Trade-off                                                                                                                                                                                                                          |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`tectonic` en el mismo proceso Fastify** (spawn) | Single container, sin cola, sin worker separado. Latencia menor (no hay round-trip a una cola). Tectonic descarga paquetes on-demand del CTAN mirror la **primera** vez y los cachea en `/var/cache/tectonic` dentro de la imagen. |
-| Worker separado + cola | Mejor aislamiento entre jobs, pero overkill para single-tenant VPS sin persistencia. Suma Redis o pg-boss sin razón. |
-| WASM en cliente | Descartado por soporte incompleto de paquetes (ver ADR-004 en `decisions-log.md`). |
+| Worker separado + cola                             | Mejor aislamiento entre jobs, pero overkill para single-tenant VPS sin persistencia. Suma Redis o pg-boss sin razón.                                                                                                               |
+| WASM en cliente                                    | Descartado por soporte incompleto de paquetes (ver ADR-004 en `decisions-log.md`).                                                                                                                                                 |
 
 **[ELEGIDA] `tectonic` corriendo como subprocess de Fastify, en el mismo container.** Concurrencia limitada en memoria con `p-limit`. Sin cola externa.
 
 Notas:
+
 - Pre-warm de paquetes: en el `Dockerfile`, durante el build, compilar un `warmup.tex` que incluya `tikz`, `biblatex`, `fontspec`, `amsmath`, etc., para llenar el cache de tectonic en la imagen. Así el primer request real de un usuario no espera la descarga inicial.
 - Si en algún caso real tectonic falla por un paquete missing, fallback a `latexmk -pdf` con texlive instalado en la misma imagen (suma ~1GB; aceptable en una VPS).
 
 ### 3.5 Backend / API
+
 **[ELEGIDA] Node + Fastify + TypeScript.** Endpoints pequeños; **REST plano** en vez de tRPC.
 
 Razón del cambio respecto al plan anterior: con auth y persistencia eliminadas, quedan 2 endpoints útiles (`POST /api/compile`, `GET /api/health`). tRPC suma boilerplate sin pagar la inversión. Los tipos del request/response se comparten via `packages/shared` (zod schemas).
 
 ### 3.6 Storage
+
 **[ELEGIDA] tmpfs dentro del container** para los jobs de compilación. Sin persistencia. El contenido del usuario vive en el browser (Zustand en memoria por default; IndexedDB opcional con toggle en Fase 4).
 
 ### 3.7 Base de datos
+
 **Eliminada.** No hay nada que persistir.
 
 ### 3.8 Cola de jobs
+
 **Eliminada.** `p-limit(N)` en memoria reemplaza BullMQ/Redis para single-VPS.
 
 ### 3.9 Auth
+
 **Eliminada permanentemente.** El producto es libre y anónimo. Cualquier abuse-mitigation se hace por rate-limit por IP, no por cuenta (ver §5).
 
 ### 3.10 Hosting / Despliegue
+
 **[ELEGIDA] VPS propia, orquestada con Coolify, un solo Dockerfile multi-stage.**
 
 - **Dockerfile** (estructura):
@@ -220,20 +231,20 @@ Las mismas de antes, aplicadas ahora a un subprocess en vez de un container por 
 
 ## 7. Resumen de stack elegido (actualizado)
 
-| Capa | Decisión |
-|---|---|
-| Frontend | Vite + React + TypeScript |
-| Estado del proyecto | Zustand en memoria (default). IndexedDB opcional Fase 4. |
-| Editor | CodeMirror 6 (`stex`) |
-| PDF viewer | pdfjs-dist |
-| Compilación | `tectonic` (subprocess de Fastify) + fallback `latexmk` con TeX Live |
-| API | Node + Fastify + TypeScript, **REST** (no tRPC) |
-| Tipos compartidos | `packages/shared` con zod schemas |
-| Cola | `p-limit(N)` en memoria — sin Redis, sin BullMQ |
-| DB | Ninguna |
-| Storage | tmpfs `/tmp/jobs/` dentro del container; cero persistencia |
-| Auth | Ninguna |
-| Despliegue | **Coolify en VPS, un único Dockerfile multi-stage** |
-| Rate limit | `@fastify/rate-limit` por IP, in-memory |
+| Capa                | Decisión                                                             |
+| ------------------- | -------------------------------------------------------------------- |
+| Frontend            | Vite + React + TypeScript                                            |
+| Estado del proyecto | Zustand en memoria (default). IndexedDB opcional Fase 4.             |
+| Editor              | CodeMirror 6 (`stex`)                                                |
+| PDF viewer          | pdfjs-dist                                                           |
+| Compilación         | `tectonic` (subprocess de Fastify) + fallback `latexmk` con TeX Live |
+| API                 | Node + Fastify + TypeScript, **REST** (no tRPC)                      |
+| Tipos compartidos   | `packages/shared` con zod schemas                                    |
+| Cola                | `p-limit(N)` en memoria — sin Redis, sin BullMQ                      |
+| DB                  | Ninguna                                                              |
+| Storage             | tmpfs `/tmp/jobs/` dentro del container; cero persistencia           |
+| Auth                | Ninguna                                                              |
+| Despliegue          | **Coolify en VPS, un único Dockerfile multi-stage**                  |
+| Rate limit          | `@fastify/rate-limit` por IP, in-memory                              |
 
 Costo operativo: **el de la VPS que ya tenés**. Sin servicios externos.

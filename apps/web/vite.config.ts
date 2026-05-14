@@ -19,7 +19,8 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules/pdfjs-dist')) return 'pdfjs';
-          if (id.includes('node_modules/@codemirror') || id.includes('node_modules/@lezer')) return 'codemirror';
+          if (id.includes('node_modules/@codemirror') || id.includes('node_modules/@lezer'))
+            return 'codemirror';
         },
       },
     },

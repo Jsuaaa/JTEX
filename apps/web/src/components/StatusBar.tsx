@@ -9,7 +9,11 @@ export function StatusBar() {
   const lastSavedAt = useProject((s) => s.lastSavedAt);
 
   const parsed = useMemo(() => {
-    if (compile.status === 'success' || compile.status === 'error' || compile.status === 'timeout') {
+    if (
+      compile.status === 'success' ||
+      compile.status === 'error' ||
+      compile.status === 'timeout'
+    ) {
       return parseTeXLog(compile.log);
     }
     return null;
@@ -17,7 +21,11 @@ export function StatusBar() {
 
   const compiling = compile.status === 'compiling';
   const isOk = compile.status === 'success' && (parsed?.errorCount ?? 0) === 0;
-  const isErr = compile.status === 'error' || compile.status === 'timeout' || compile.status === 'network_error' || compile.status === 'invalid';
+  const isErr =
+    compile.status === 'error' ||
+    compile.status === 'timeout' ||
+    compile.status === 'network_error' ||
+    compile.status === 'invalid';
 
   const recent = useMemo(() => {
     if (!parsed) return [] as { tag: string; msg: string }[];
@@ -29,17 +37,28 @@ export function StatusBar() {
   return (
     <footer className="statusbar">
       <div className="status-left">
-        <span className={'status-pill ' + (isErr ? 'status-pill-err' : isOk ? 'status-pill-ok' : '')}>
-          {compiling ? <span className="spinner" /> : isErr ? <AlertTriangle size={11} /> : <Check size={11} />}
+        <span
+          className={'status-pill ' + (isErr ? 'status-pill-err' : isOk ? 'status-pill-ok' : '')}
+        >
+          {compiling ? (
+            <span className="spinner" />
+          ) : isErr ? (
+            <AlertTriangle size={11} />
+          ) : (
+            <Check size={11} />
+          )}
           {compiling ? 'Compiling' : isErr ? 'Build error' : isOk ? 'Build OK' : 'Idle'}
         </span>
         {parsed && parsed.warningCount > 0 && (
           <span className="status-pill status-pill-warn">
-            <AlertTriangle size={10} /> {parsed.warningCount} warning{parsed.warningCount === 1 ? '' : 's'}
+            <AlertTriangle size={10} /> {parsed.warningCount} warning
+            {parsed.warningCount === 1 ? '' : 's'}
           </span>
         )}
         {parsed && parsed.errorCount > 0 && (
-          <span className="status-pill status-pill-err">{parsed.errorCount} error{parsed.errorCount === 1 ? '' : 's'}</span>
+          <span className="status-pill status-pill-err">
+            {parsed.errorCount} error{parsed.errorCount === 1 ? '' : 's'}
+          </span>
         )}
         <span className="status-pill">{engine}</span>
       </div>

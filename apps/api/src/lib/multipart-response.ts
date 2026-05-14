@@ -1,7 +1,12 @@
 import { randomBytes } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 
-export function sendPdfWithLog(reply: FastifyReply, pdf: Buffer, log: string, durationMs: number): void {
+export function sendPdfWithLog(
+  reply: FastifyReply,
+  pdf: Buffer,
+  log: string,
+  durationMs: number,
+): void {
   const boundary = `jtex-${randomBytes(8).toString('hex')}`;
   const eol = '\r\n';
 

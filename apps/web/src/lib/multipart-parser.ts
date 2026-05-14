@@ -1,6 +1,4 @@
-export async function parseMultipartMixed(
-  res: Response,
-): Promise<{ pdf: Blob; log: string }> {
+export async function parseMultipartMixed(res: Response): Promise<{ pdf: Blob; log: string }> {
   const contentType = res.headers.get('content-type') ?? '';
   const match = /boundary=([^;]+)/i.exec(contentType);
   if (!match) throw new Error('missing boundary');
@@ -15,7 +13,10 @@ export async function parseMultipartMixed(
   for (let i = 0; i <= body.length - delim.length; i++) {
     let match = true;
     for (let j = 0; j < delim.length; j++) {
-      if (body[i + j] !== delim[j]) { match = false; break; }
+      if (body[i + j] !== delim[j]) {
+        match = false;
+        break;
+      }
     }
     if (match) positions.push(i);
   }
@@ -30,7 +31,12 @@ export async function parseMultipartMixed(
 
     let headerEnd = start;
     while (headerEnd < body.length - 3) {
-      if (body[headerEnd] === eol && body[headerEnd + 1] === eol2 && body[headerEnd + 2] === eol && body[headerEnd + 3] === eol2) {
+      if (
+        body[headerEnd] === eol &&
+        body[headerEnd + 1] === eol2 &&
+        body[headerEnd + 2] === eol &&
+        body[headerEnd + 3] === eol2
+      ) {
         break;
       }
       headerEnd++;

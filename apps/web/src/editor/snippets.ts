@@ -6,7 +6,10 @@ export function insertAtCursor(view: EditorView, before: string, after = ''): vo
   const inserted = before + state.sliceDoc(sel.from, sel.to) + after;
   dispatch({
     changes: { from: sel.from, to: sel.to, insert: inserted },
-    selection: { anchor: sel.from + before.length, head: sel.from + before.length + (sel.to - sel.from) },
+    selection: {
+      anchor: sel.from + before.length,
+      head: sel.from + before.length + (sel.to - sel.from),
+    },
     scrollIntoView: true,
   });
   view.focus();
@@ -33,7 +36,10 @@ export const SNIPPETS = {
   table: (v: EditorView) =>
     insertBlock(v, '\\begin{tabular}{cc}\n  a & b \\\\\n  c & d \\\\\n\\end{tabular}\n'),
   figure: (v: EditorView) =>
-    insertBlock(v, '\\begin{figure}[h]\n  \\centering\n  \\includegraphics[width=0.6\\linewidth]{}\n  \\caption{}\n\\end{figure}\n'),
+    insertBlock(
+      v,
+      '\\begin{figure}[h]\n  \\centering\n  \\includegraphics[width=0.6\\linewidth]{}\n  \\caption{}\n\\end{figure}\n',
+    ),
   section: (v: EditorView) => insertAtCursor(v, '\\section{', '}'),
   subsection: (v: EditorView) => insertAtCursor(v, '\\subsection{', '}'),
 };

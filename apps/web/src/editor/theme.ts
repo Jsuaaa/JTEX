@@ -24,11 +24,21 @@ export const jtexTheme = EditorView.theme(
     '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
       backgroundColor: colors.selection,
     },
-    '.cm-gutters': { backgroundColor: 'var(--bg)', color: colors.gutter, border: 'none', borderRight: '1px solid var(--border-soft)' },
+    '.cm-gutters': {
+      backgroundColor: 'var(--bg)',
+      color: colors.gutter,
+      border: 'none',
+      borderRight: '1px solid var(--border-soft)',
+    },
     '.cm-activeLineGutter': { backgroundColor: 'transparent', color: colors.activeGutter },
     '.cm-activeLine': { backgroundColor: 'color-mix(in oklch, var(--accent) 6%, transparent)' },
     '.cm-scroller': { fontFamily: 'var(--editor-font)' },
-    '.cm-tooltip': { backgroundColor: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '6px' },
+    '.cm-tooltip': {
+      backgroundColor: 'var(--bg-2)',
+      color: 'var(--text)',
+      border: '1px solid var(--border)',
+      borderRadius: '6px',
+    },
     '.cm-tooltip-autocomplete > ul > li[aria-selected]': { backgroundColor: 'var(--bg-active)' },
   },
   { dark: true },

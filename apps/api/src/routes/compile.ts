@@ -15,7 +15,14 @@ let waiting = 0;
 export function registerCompile(app: FastifyInstance): void {
   app.post(
     '/api/compile',
-    { config: { rateLimit: { max: LIMITS.rateLimit.compile.max, timeWindow: LIMITS.rateLimit.compile.windowMs } } },
+    {
+      config: {
+        rateLimit: {
+          max: LIMITS.rateLimit.compile.max,
+          timeWindow: LIMITS.rateLimit.compile.windowMs,
+        },
+      },
+    },
     handler,
   );
 }
@@ -36,7 +43,9 @@ async function handler(req: FastifyRequest, reply: FastifyReply): Promise<void> 
     let failure: { code: number; body: unknown } | null = null;
 
     try {
-      const parts = req.parts({ limits: { fileSize: config.maxProjectBytes, files: 1, fields: 8 } });
+      const parts = req.parts({
+        limits: { fileSize: config.maxProjectBytes, files: 1, fields: 8 },
+      });
 
       for await (const part of parts) {
         if (failure) continue;
@@ -58,7 +67,10 @@ async function handler(req: FastifyRequest, reply: FastifyReply): Promise<void> 
             chunks.push(chunk);
             total += chunk.length;
             if (total > config.maxProjectBytes) {
-              failure = { code: 413, body: { status: 'invalid', reason: 'project exceeds size limit' } };
+              failure = {
+                code: 413,
+                body: { status: 'invalid', reason: 'project exceeds size limit' },
+              };
               break;
             }
           }
@@ -88,7 +100,9 @@ async function handler(req: FastifyRequest, reply: FastifyReply): Promise<void> 
     const entryCheck = validateRelativePath(entryFile);
     if (!entryCheck.ok) {
       await rm(jobDir, { recursive: true, force: true });
-      return reply.status(400).send({ status: 'invalid', reason: `invalid entryFile: ${entryCheck.error}` });
+      return reply
+        .status(400)
+        .send({ status: 'invalid', reason: `invalid entryFile: ${entryCheck.error}` });
     }
 
     let entries: Record<string, Uint8Array>;
@@ -106,7 +120,9 @@ async function handler(req: FastifyRequest, reply: FastifyReply): Promise<void> 
       const v = validateRelativePath(rawPath);
       if (!v.ok) {
         await rm(jobDir, { recursive: true, force: true });
-        return reply.status(400).send({ status: 'invalid', reason: `invalid path in archive: ${rawPath} (${v.error})` });
+        return reply
+          .status(400)
+          .send({ status: 'invalid', reason: `invalid path in archive: ${rawPath} (${v.error})` });
       }
       fileCount++;
       if (fileCount > LIMITS.maxFileCount) {
@@ -139,7 +155,9 @@ async function handler(req: FastifyRequest, reply: FastifyReply): Promise<void> 
       }
 
       if (outcome.kind === 'timeout') {
-        return reply.status(504).send({ status: 'timeout', log: outcome.log, durationMs: outcome.durationMs });
+        return reply
+          .status(504)
+          .send({ status: 'timeout', log: outcome.log, durationMs: outcome.durationMs });
       }
 
       const parsed = parseTeXLog(outcome.log);

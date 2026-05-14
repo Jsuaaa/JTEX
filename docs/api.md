@@ -14,13 +14,14 @@ Compila un proyecto LaTeX y devuelve el PDF resultante. **Stateless**: el servid
 
 **Request:** `multipart/form-data`
 
-| Field | Tipo | Requerido | Notas |
-|---|---|---|---|
-| `entryFile` | text | sí | Path relativo del `.tex` principal, ej. `main.tex`. Debe estar entre los `file` uploads. |
-| `engine` | text | no (default `tectonic`) | `tectonic` \| `pdflatex` \| `xelatex` \| `lualatex` |
-| `file` | file (repetido, N veces) | sí (≥ 1) | Cada archivo del proyecto. `filename` del multipart = path relativo (ej. `chapters/intro.tex`). |
+| Field       | Tipo                     | Requerido               | Notas                                                                                           |
+| ----------- | ------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------- |
+| `entryFile` | text                     | sí                      | Path relativo del `.tex` principal, ej. `main.tex`. Debe estar entre los `file` uploads.        |
+| `engine`    | text                     | no (default `tectonic`) | `tectonic` \| `pdflatex` \| `xelatex` \| `lualatex`                                             |
+| `file`      | file (repetido, N veces) | sí (≥ 1)                | Cada archivo del proyecto. `filename` del multipart = path relativo (ej. `chapters/intro.tex`). |
 
 Validaciones (todas server-side, espejadas en el cliente para feedback temprano):
+
 - Body total ≤ 50MB.
 - ≤ 200 files.
 - Paths: helper `packages/shared/paths.ts` (no `..`, no leading `/`, sin caracteres de control, extensión whitelisteada).
@@ -46,6 +47,7 @@ Content-Disposition: form-data; name="log"
 El frontend parsea ambos parts (helper en `apps/web/src/lib/multipart.ts`).
 
 **Response 422 Unprocessable Entity — error de compilación**
+
 ```json
 {
   "status": "error",
@@ -55,11 +57,13 @@ El frontend parsea ambos parts (helper en `apps/web/src/lib/multipart.ts`).
 ```
 
 **Response 504 — timeout**
+
 ```json
 { "status": "timeout", "log": "...", "durationMs": 60000 }
 ```
 
 **Response 400 — validación**
+
 ```json
 { "status": "invalid", "reason": "path traversal in file 'chapters/../etc/passwd'" }
 ```
@@ -73,6 +77,7 @@ El frontend parsea ambos parts (helper en `apps/web/src/lib/multipart.ts`).
 Healthcheck para Coolify y monitoring.
 
 **Response 200:**
+
 ```json
 { "ok": true, "version": "0.1.0", "tectonic": "0.15.0" }
 ```
@@ -83,10 +88,10 @@ Healthcheck para Coolify y monitoring.
 
 `@fastify/rate-limit` con storage in-memory:
 
-| Endpoint | Límite |
-|---|---|
+| Endpoint            | Límite           |
+| ------------------- | ---------------- |
 | `POST /api/compile` | 30 / 15 min / IP |
-| `GET /api/health` | sin límite |
+| `GET /api/health`   | sin límite       |
 
 Headers de respuesta estándar: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
 
@@ -103,12 +108,13 @@ import { z } from 'zod';
 export const Engine = z.enum(['tectonic', 'pdflatex', 'xelatex', 'lualatex']);
 export type Engine = z.infer<typeof Engine>;
 
-export const RelativePath = z.string()
+export const RelativePath = z
+  .string()
   .min(1)
   .max(255)
-  .refine(s => !s.startsWith('/') && !s.startsWith('\\'))
-  .refine(s => !s.split(/[/\\]/).includes('..'))
-  .refine(s => !/[\x00-\x1f]/.test(s));
+  .refine((s) => !s.startsWith('/') && !s.startsWith('\\'))
+  .refine((s) => !s.split(/[/\\]/).includes('..'))
+  .refine((s) => !/[\x00-\x1f]/.test(s));
 
 export const AllowedExt = /\.(tex|bib|cls|sty|bst|pdf|png|jpg|jpeg|eps|svg|tikz)$/i;
 

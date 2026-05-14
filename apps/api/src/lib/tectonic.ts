@@ -58,17 +58,31 @@ export async function compileLatex(opts: CompileOptions): Promise<CompileOutcome
       proc.kill('SIGKILL');
     }, timeoutMs);
 
-    proc.stdout.on('data', (c) => { stdout += c.toString('utf8'); });
-    proc.stderr.on('data', (c) => { stderr += c.toString('utf8'); });
+    proc.stdout.on('data', (c) => {
+      stdout += c.toString('utf8');
+    });
+    proc.stderr.on('data', (c) => {
+      stderr += c.toString('utf8');
+    });
 
-    proc.on('error', () => { clearTimeout(timer); resolve({ code: -1, timedOut }); });
-    proc.on('close', (code) => { clearTimeout(timer); resolve({ code, timedOut }); });
+    proc.on('error', () => {
+      clearTimeout(timer);
+      resolve({ code: -1, timedOut });
+    });
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ code, timedOut });
+    });
   });
 
   const durationMs = Date.now() - start;
 
   let logFromFile = '';
-  try { logFromFile = await readFile(logPath, 'utf8'); } catch { /* may not exist */ }
+  try {
+    logFromFile = await readFile(logPath, 'utf8');
+  } catch {
+    /* may not exist */
+  }
 
   const log = logFromFile || stdout || stderr || '(no log produced)';
 
@@ -84,18 +98,26 @@ export async function compileLatex(opts: CompileOptions): Promise<CompileOutcome
     if (pdf.length > 0) {
       return { kind: 'success', pdf, log, durationMs, engineUsed: strategy.label };
     }
-  } catch { /* no PDF produced */ }
+  } catch {
+    /* no PDF produced */
+  }
 
   return { kind: 'error', log, durationMs, engineUsed: strategy.label };
 }
 
-function decideStrategy(content: string, requestedEngine: CompileOptions['engine'], entryFile: string): Strategy {
+function decideStrategy(
+  content: string,
+  requestedEngine: CompileOptions['engine'],
+  entryFile: string,
+): Strategy {
   const magic = /^%\s*!\s*TEX\s+(?:TS-)?program\s*=\s*(\w+)/im.exec(content);
   const usesFontspec = /\\usepackage(?:\s*\[[^\]]*\])?\s*\{fontspec\}/.test(content);
   const usesBiblatex = /\\usepackage(?:\s*\[[^\]]*\])?\s*\{biblatex\}/.test(content);
   const usesBibtex = /\\bibliographystyle\s*\{|\\bibliography\s*\{/.test(content);
   const usesPolyglossia = /\\usepackage(?:\s*\[[^\]]*\])?\s*\{polyglossia\}/.test(content);
-  const usesLuaPackage = /\\usepackage(?:\s*\[[^\]]*\])?\s*\{(luacode|luatextra|lua-ul)\}/.test(content);
+  const usesLuaPackage = /\\usepackage(?:\s*\[[^\]]*\])?\s*\{(luacode|luatextra|lua-ul)\}/.test(
+    content,
+  );
 
   let resolvedEngine: 'pdflatex' | 'xelatex' | 'lualatex';
   if (magic) {
@@ -105,7 +127,11 @@ function decideStrategy(content: string, requestedEngine: CompileOptions['engine
     resolvedEngine = 'lualatex';
   } else if (usesFontspec || usesPolyglossia) {
     resolvedEngine = 'xelatex';
-  } else if (requestedEngine === 'xelatex' || requestedEngine === 'lualatex' || requestedEngine === 'pdflatex') {
+  } else if (
+    requestedEngine === 'xelatex' ||
+    requestedEngine === 'lualatex' ||
+    requestedEngine === 'pdflatex'
+  ) {
     resolvedEngine = requestedEngine;
   } else {
     resolvedEngine = 'pdflatex';
@@ -115,10 +141,7 @@ function decideStrategy(content: string, requestedEngine: CompileOptions['engine
   // It's faster than latexmk and downloads packages on demand, but doesn't drive biber
   // reliably (v0.15) and stops at .xdv when fontspec is involved.
   const tectonicSafe =
-    requestedEngine === 'tectonic' &&
-    resolvedEngine === 'pdflatex' &&
-    !usesBiblatex &&
-    !usesBibtex;
+    requestedEngine === 'tectonic' && resolvedEngine === 'pdflatex' && !usesBiblatex && !usesBibtex;
 
   if (tectonicSafe) {
     return {
@@ -129,9 +152,11 @@ function decideStrategy(content: string, requestedEngine: CompileOptions['engine
   }
 
   const engineFlag =
-    resolvedEngine === 'xelatex' ? '-xelatex' :
-    resolvedEngine === 'lualatex' ? '-lualatex' :
-    '-pdf';
+    resolvedEngine === 'xelatex'
+      ? '-xelatex'
+      : resolvedEngine === 'lualatex'
+        ? '-lualatex'
+        : '-pdf';
 
   return {
     cmd: 'latexmk',
@@ -153,7 +178,11 @@ function replaceExt(filename: string, newExt: string): string {
 
 // One-level read of \input{}/\include{} targets so engine detection
 // (biblatex/fontspec/etc.) sees the preamble when it lives in a sub-file.
-async function readIncludedFiles(jobDir: string, entryFile: string, entryContent: string): Promise<string> {
+async function readIncludedFiles(
+  jobDir: string,
+  entryFile: string,
+  entryContent: string,
+): Promise<string> {
   if (!entryContent) return '';
   const re = /\\(?:input|include)\s*\{([^}]+)\}/g;
   const baseDir = path.dirname(path.join(jobDir, entryFile));
@@ -171,7 +200,9 @@ async function readIncludedFiles(jobDir: string, entryFile: string, entryContent
     if (resolved !== jobRoot && !resolved.startsWith(jobRoot + path.sep)) continue;
     try {
       combined += '\n' + (await readFile(resolved, 'utf8'));
-    } catch { /* missing — compiler will produce the right error */ }
+    } catch {
+      /* missing — compiler will produce the right error */
+    }
   }
   return combined;
 }

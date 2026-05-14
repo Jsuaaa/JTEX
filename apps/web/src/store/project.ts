@@ -112,7 +112,9 @@ export const useProject = create<ProjectStore>((set, get) => ({
 }));
 
 function detectEntry(files: FileEntry[]): string | null {
-  const texFiles = files.filter((f) => f.kind === 'text' && f.path.toLowerCase().endsWith('.tex')) as Extract<FileEntry, { kind: 'text' }>[];
+  const texFiles = files.filter(
+    (f) => f.kind === 'text' && f.path.toLowerCase().endsWith('.tex'),
+  ) as Extract<FileEntry, { kind: 'text' }>[];
   for (const f of texFiles) {
     if (/\\documentclass\b/.test(f.content)) return f.path;
   }

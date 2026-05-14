@@ -5,7 +5,10 @@ import { useProject } from '../store/project';
 type PdfDocLike = { numPages: number; getPage: (n: number) => Promise<PdfPageLike> };
 type PdfPageLike = {
   getViewport: (opts: { scale: number }) => { width: number; height: number };
-  render: (params: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => { promise: Promise<void> };
+  render: (params: {
+    canvasContext: CanvasRenderingContext2D;
+    viewport: { width: number; height: number };
+  }) => { promise: Promise<void> };
 };
 
 let pdfjsPromise: Promise<typeof import('pdfjs-dist')> | null = null;
@@ -46,7 +49,9 @@ export function PreviewPane({ onCompile }: { onCompile: () => void }) {
     })().catch((err) => {
       console.error('PDF load failed', err);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [compile]);
 
   useEffect(() => {
@@ -71,7 +76,9 @@ export function PreviewPane({ onCompile }: { onCompile: () => void }) {
         await page.render({ canvasContext: ctx, viewport }).promise;
       }
     })().catch((err) => console.error('PDF render failed', err));
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pdfDoc, zoom]);
 
   const onScroll = () => {
@@ -87,13 +94,19 @@ export function PreviewPane({ onCompile }: { onCompile: () => void }) {
 
   const goPage = (n: number) => {
     if (!containerRef.current) return;
-    const canvas = containerRef.current.querySelector<HTMLCanvasElement>(`canvas[data-page="${n}"]`);
+    const canvas = containerRef.current.querySelector<HTMLCanvasElement>(
+      `canvas[data-page="${n}"]`,
+    );
     if (canvas) containerRef.current.scrollTo({ top: canvas.offsetTop - 16, behavior: 'smooth' });
   };
 
   const totalPages = pdfDoc?.numPages ?? 0;
   const compiling = compile.status === 'compiling';
-  const showError = compile.status === 'error' || compile.status === 'timeout' || compile.status === 'invalid' || compile.status === 'network_error';
+  const showError =
+    compile.status === 'error' ||
+    compile.status === 'timeout' ||
+    compile.status === 'invalid' ||
+    compile.status === 'network_error';
 
   return (
     <section className="preview-pane">
@@ -101,20 +114,63 @@ export function PreviewPane({ onCompile }: { onCompile: () => void }) {
         <div className="prev-tabs">
           <div className="pane-tab is-active">main.pdf</div>
           <span className="prev-status">
-            {compiling && <><span className="spinner" /> Compiling…</>}
-            {compile.status === 'success' && <><span className="status-dot status-ok" /> Compiled in {(compile.durationMs / 1000).toFixed(2)}s</>}
-            {showError && <><span className="status-dot status-err" /> {labelFor(compile.status)}</>}
-            {compile.status === 'idle' && <><span className="status-dot" /> Sin compilar</>}
+            {compiling && (
+              <>
+                <span className="spinner" /> Compiling…
+              </>
+            )}
+            {compile.status === 'success' && (
+              <>
+                <span className="status-dot status-ok" /> Compiled in{' '}
+                {(compile.durationMs / 1000).toFixed(2)}s
+              </>
+            )}
+            {showError && (
+              <>
+                <span className="status-dot status-err" /> {labelFor(compile.status)}
+              </>
+            )}
+            {compile.status === 'idle' && (
+              <>
+                <span className="status-dot" /> Sin compilar
+              </>
+            )}
           </span>
         </div>
         <div className="prev-controls">
-          <button className="ctrl-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label="Zoom out"><Minus size={12} /></button>
+          <button
+            className="ctrl-btn"
+            onClick={() => setZoom((z) => Math.max(50, z - 10))}
+            aria-label="Zoom out"
+          >
+            <Minus size={12} />
+          </button>
           <span className="zoom-val">{zoom}%</span>
-          <button className="ctrl-btn" onClick={() => setZoom((z) => Math.min(200, z + 10))} aria-label="Zoom in"><Plus size={12} /></button>
+          <button
+            className="ctrl-btn"
+            onClick={() => setZoom((z) => Math.min(200, z + 10))}
+            aria-label="Zoom in"
+          >
+            <Plus size={12} />
+          </button>
           <span className="ctrl-sep" />
-          <button className="ctrl-btn" onClick={() => goPage(Math.max(1, currentPage - 1))} aria-label="Previous page" disabled={!pdfDoc}><ChevronLeft size={12} /></button>
+          <button
+            className="ctrl-btn"
+            onClick={() => goPage(Math.max(1, currentPage - 1))}
+            aria-label="Previous page"
+            disabled={!pdfDoc}
+          >
+            <ChevronLeft size={12} />
+          </button>
           <span className="page-val">{pdfDoc ? `${currentPage} / ${totalPages}` : '—'}</span>
-          <button className="ctrl-btn" onClick={() => goPage(Math.min(totalPages, currentPage + 1))} aria-label="Next page" disabled={!pdfDoc}><ChevronRight size={12} /></button>
+          <button
+            className="ctrl-btn"
+            onClick={() => goPage(Math.min(totalPages, currentPage + 1))}
+            aria-label="Next page"
+            disabled={!pdfDoc}
+          >
+            <ChevronRight size={12} />
+          </button>
           <span className="ctrl-sep" />
           <button
             className="ctrl-btn"
@@ -123,8 +179,11 @@ export function PreviewPane({ onCompile }: { onCompile: () => void }) {
               if (compile.status !== 'success') return;
               const url = URL.createObjectURL(compile.pdfBlob);
               const a = document.createElement('a');
-              a.href = url; a.download = 'document.pdf';
-              document.body.appendChild(a); a.click(); a.remove();
+              a.href = url;
+              a.download = 'document.pdf';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
               setTimeout(() => URL.revokeObjectURL(url), 1000);
             }}
             aria-label="Download PDF"
@@ -147,11 +206,17 @@ export function PreviewPane({ onCompile }: { onCompile: () => void }) {
               <div className="prev-empty">
                 Presioná <kbd>⌘↵</kbd> o el botón <strong>Recompile</strong> para generar el PDF.
                 <div style={{ marginTop: 12 }}>
-                  <button className="btn btn-primary" onClick={onCompile}>Recompile ahora</button>
+                  <button className="btn btn-primary" onClick={onCompile}>
+                    Recompile ahora
+                  </button>
                 </div>
               </div>
             )}
-            {compiling && <div className="prev-empty"><span className="spinner spinner-lg" /></div>}
+            {compiling && (
+              <div className="prev-empty">
+                <span className="spinner spinner-lg" />
+              </div>
+            )}
             {showError && <ErrorBox />}
           </div>
         )}
@@ -174,7 +239,10 @@ function ErrorBox() {
     return (
       <div className="prev-error">
         <h3>Timeout</h3>
-        <pre>El compilador superó el límite de tiempo. Revisá si hay un loop infinito o un paquete que no responde.</pre>
+        <pre>
+          El compilador superó el límite de tiempo. Revisá si hay un loop infinito o un paquete que
+          no responde.
+        </pre>
       </div>
     );
   }
@@ -191,10 +259,15 @@ function ErrorBox() {
 
 function labelFor(s: string): string {
   switch (s) {
-    case 'error': return 'Error de compilación';
-    case 'timeout': return 'Timeout';
-    case 'invalid': return 'Petición inválida';
-    case 'network_error': return 'Error de red';
-    default: return s;
+    case 'error':
+      return 'Error de compilación';
+    case 'timeout':
+      return 'Timeout';
+    case 'invalid':
+      return 'Petición inválida';
+    case 'network_error':
+      return 'Error de red';
+    default:
+      return s;
   }
 }

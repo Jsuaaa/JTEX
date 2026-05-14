@@ -1,14 +1,29 @@
 import { X } from 'lucide-react';
-import { ACCENT_OPTIONS, useSettings, type Density, type EditorFont, type PaperTone, type Theme } from '../store/settings';
+import {
+  ACCENT_OPTIONS,
+  useSettings,
+  type Density,
+  type EditorFont,
+  type PaperTone,
+  type Theme,
+} from '../store/settings';
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const s = useSettings();
   return (
     <div className="settings-overlay" onClick={onClose}>
-      <div className="settings-panel" role="dialog" aria-modal="true" aria-label="Settings" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="settings-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="settings-head">
           <h2>Settings</h2>
-          <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close"><X size={14} /></button>
+          <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close">
+            <X size={14} />
+          </button>
         </div>
         <div className="settings-body">
           <section className="settings-section">
@@ -17,7 +32,10 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               <span className="row-label">Theme</span>
               <Segmented<Theme>
                 value={s.theme}
-                options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]}
+                options={[
+                  { value: 'dark', label: 'Dark' },
+                  { value: 'light', label: 'Light' },
+                ]}
                 onChange={(v) => s.set('theme', v)}
               />
             </div>
@@ -39,7 +57,10 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               <span className="row-label">Paper tone</span>
               <Segmented<PaperTone>
                 value={s.paperTone}
-                options={[{ value: 'cream', label: 'Cream' }, { value: 'white', label: 'White' }]}
+                options={[
+                  { value: 'cream', label: 'Cream' },
+                  { value: 'white', label: 'White' },
+                ]}
                 onChange={(v) => s.set('paperTone', v)}
               />
             </div>
@@ -72,7 +93,10 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               <span className="row-label">Density</span>
               <Segmented<Density>
                 value={s.density}
-                options={[{ value: 'compact', label: 'Compact' }, { value: 'comfortable', label: 'Comfortable' }]}
+                options={[
+                  { value: 'compact', label: 'Compact' },
+                  { value: 'comfortable', label: 'Comfortable' },
+                ]}
                 onChange={(v) => s.set('density', v)}
               />
             </div>
@@ -92,7 +116,8 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               <span className="row-label">
                 Recordar este proyecto en este navegador
                 <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>
-                  Si está activo, tus archivos se guardan en IndexedDB de este navegador. Aún así, jamás tocan el servidor.
+                  Si está activo, tus archivos se guardan en IndexedDB de este navegador. Aún así,
+                  jamás tocan el servidor.
                 </div>
               </span>
               <button
@@ -111,8 +136,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 }
 
 function Segmented<T extends string>({
-  value, options, onChange,
-}: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
   return (
     <div className="seg-control" role="radiogroup">
       {options.map((opt) => (

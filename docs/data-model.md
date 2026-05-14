@@ -1,6 +1,7 @@
 # Modelo de datos — jtex
 
 **No hay base de datos.** El servidor es stateless. Este documento describe:
+
 1. La estructura del estado del proyecto en el cliente (browser).
 2. La estructura del filesystem efímero del servidor durante una compilación.
 3. La forma del request/response de `POST /api/compile`.
@@ -24,12 +25,12 @@ type CompileResult =
   | { status: 'timeout'; log: string; finishedAt: number };
 
 type ProjectState = {
-  name: string;                    // ej. "untitled" o el nombre del zip subido
-  entryFile: string | null;        // path relativo del .tex principal
-  engine: Engine;                  // default 'tectonic'
-  files: Map<string, FileEntry>;   // key = path relativo
-  activeFile: string | null;       // path actualmente abierto en el editor
-  compile: CompileResult;          // estado del último compile
+  name: string; // ej. "untitled" o el nombre del zip subido
+  entryFile: string | null; // path relativo del .tex principal
+  engine: Engine; // default 'tectonic'
+  files: Map<string, FileEntry>; // key = path relativo
+  activeFile: string | null; // path actualmente abierto en el editor
+  compile: CompileResult; // estado del último compile
 };
 ```
 
@@ -38,6 +39,7 @@ type ProjectState = {
 **Opcional (Fase 4, detrás de un toggle "Recordar este proyecto en mi navegador" — OFF por default):** snapshot del `ProjectState` a IndexedDB cada N segundos, restaurado al cargar. Cuando el toggle está OFF, nada toca IndexedDB.
 
 ### Validación de paths (cliente y servidor, código compartido en `packages/shared/paths.ts`)
+
 - No empieza con `/` ni `\`.
 - No contiene `..` como segmento.
 - No contiene caracteres de control (`\x00-\x1f`).
@@ -77,13 +79,14 @@ Por cada request a `POST /api/compile`, el servidor:
 
 `Content-Type: multipart/form-data`
 
-| Field | Tipo | Notas |
-|---|---|---|
-| `entryFile` | text | path relativo del `.tex` principal, ej. `main.tex` |
-| `engine` | text | `tectonic` \| `pdflatex` \| `xelatex` \| `lualatex` |
-| `file` | file (repetido) | Cada archivo del proyecto. El nombre del field es `file`; el `filename` del multipart es el **path relativo dentro del proyecto** (ej. `chapters/intro.tex`). |
+| Field       | Tipo            | Notas                                                                                                                                                         |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entryFile` | text            | path relativo del `.tex` principal, ej. `main.tex`                                                                                                            |
+| `engine`    | text            | `tectonic` \| `pdflatex` \| `xelatex` \| `lualatex`                                                                                                           |
+| `file`      | file (repetido) | Cada archivo del proyecto. El nombre del field es `file`; el `filename` del multipart es el **path relativo dentro del proyecto** (ej. `chapters/intro.tex`). |
 
 Restricciones:
+
 - Body total ≤ 50MB.
 - ≤ 200 archivos.
 - Cada `filename` validado con el helper de `packages/shared/paths.ts`.
@@ -93,6 +96,7 @@ Restricciones:
 `200 OK`, `Content-Type: multipart/mixed; boundary=...`
 
 Dos parts:
+
 1. `application/pdf; name="pdf"` — el PDF.
 2. `text/plain; name="log"` — el log de compilación completo.
 

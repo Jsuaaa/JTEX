@@ -2,8 +2,18 @@ import { z } from 'zod';
 import { LIMITS } from './limits.js';
 
 export const ALLOWED_EXTENSIONS = [
-  'tex', 'bib', 'cls', 'sty', 'bst', 'tikz',
-  'pdf', 'png', 'jpg', 'jpeg', 'eps', 'svg',
+  'tex',
+  'bib',
+  'cls',
+  'sty',
+  'bst',
+  'tikz',
+  'pdf',
+  'png',
+  'jpg',
+  'jpeg',
+  'eps',
+  'svg',
 ] as const;
 
 const ALLOWED_EXT_RE = new RegExp(`\\.(${ALLOWED_EXTENSIONS.join('|')})$`, 'i');
@@ -24,7 +34,9 @@ export type PathError =
   | 'empty_segment'
   | 'bad_extension';
 
-export function validateRelativePath(input: string): { ok: true; path: string } | { ok: false; error: PathError } {
+export function validateRelativePath(
+  input: string,
+): { ok: true; path: string } | { ok: false; error: PathError } {
   if (!input) return { ok: false, error: 'empty' };
   if (input.length > LIMITS.maxPathLength) return { ok: false, error: 'too_long' };
   if (input.startsWith('/') || input.startsWith('\\')) return { ok: false, error: 'absolute' };

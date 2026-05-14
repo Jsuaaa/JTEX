@@ -24,9 +24,19 @@ export function App() {
     r.dataset.density = settings.density;
     r.dataset.paper = settings.paperTone;
     r.style.setProperty('--accent', settings.accent);
-    r.style.setProperty('--editor-font', `'${settings.editorFont} Variable', '${settings.editorFont}', ui-monospace, monospace`);
+    r.style.setProperty(
+      '--editor-font',
+      `'${settings.editorFont} Variable', '${settings.editorFont}', ui-monospace, monospace`,
+    );
     r.style.setProperty('--show-lns', settings.showLineNumbers ? 'block' : 'none');
-  }, [settings.theme, settings.density, settings.paperTone, settings.accent, settings.editorFont, settings.showLineNumbers]);
+  }, [
+    settings.theme,
+    settings.density,
+    settings.paperTone,
+    settings.accent,
+    settings.editorFont,
+    settings.showLineNumbers,
+  ]);
 
   useEffect(() => {
     if (!hasProject) {
@@ -43,18 +53,36 @@ export function App() {
     }
     state.setCompile({ status: 'compiling', startedAt: Date.now() });
     const files = Array.from(state.files.values());
-    const result = await compileProject({ files, entryFile: state.entryFile, engine: state.engine });
+    const result = await compileProject({
+      files,
+      entryFile: state.entryFile,
+      engine: state.engine,
+    });
     const finishedAt = Date.now();
     if (result.status === 'success') {
-      state.setCompile({ status: 'success', pdfBlob: result.pdf, log: result.log, durationMs: result.durationMs, finishedAt });
+      state.setCompile({
+        status: 'success',
+        pdfBlob: result.pdf,
+        log: result.log,
+        durationMs: result.durationMs,
+        finishedAt,
+      });
     } else if (result.status === 'error') {
-      state.setCompile({ status: 'error', log: result.log, errorSummary: result.errorSummary, finishedAt });
+      state.setCompile({
+        status: 'error',
+        log: result.log,
+        errorSummary: result.errorSummary,
+        finishedAt,
+      });
     } else if (result.status === 'timeout') {
       state.setCompile({ status: 'timeout', log: result.log, finishedAt });
     } else if (result.status === 'invalid') {
       state.setCompile({ status: 'invalid', reason: result.reason });
     } else if (result.status === 'rate_limited') {
-      state.setCompile({ status: 'network_error', reason: 'Demasiadas compilaciones. Intentá en unos minutos.' });
+      state.setCompile({
+        status: 'network_error',
+        reason: 'Demasiadas compilaciones. Intentá en unos minutos.',
+      });
     } else if (result.status === 'busy') {
       state.setCompile({ status: 'network_error', reason: 'Servidor ocupado. Intentá de nuevo.' });
     } else {

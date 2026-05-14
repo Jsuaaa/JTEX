@@ -63,7 +63,9 @@ function FilesTab() {
       if (file.name.toLowerCase().endsWith('.zip')) {
         const bytes = new Uint8Array(await file.arrayBuffer());
         const { files: entries } = await unzipProject(bytes);
-        useProject.getState().loadProject({ name: file.name.replace(/\.zip$/i, ''), files: entries });
+        useProject
+          .getState()
+          .loadProject({ name: file.name.replace(/\.zip$/i, ''), files: entries });
         return;
       }
       const v = validateRelativePath(file.name);
@@ -95,7 +97,10 @@ function FilesTab() {
   return (
     <div
       className="side-body"
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
     >
@@ -124,8 +129,13 @@ function FilesTab() {
         ))}
       </div>
 
-      <div className={'drop-zone' + (dragOver ? ' is-dragover' : '')} onClick={() => fileInput.current?.click()}>
-        <div className="drop-icon"><Upload size={20} /></div>
+      <div
+        className={'drop-zone' + (dragOver ? ' is-dragover' : '')}
+        onClick={() => fileInput.current?.click()}
+      >
+        <div className="drop-icon">
+          <Upload size={20} />
+        </div>
         <div className="drop-title">Drop .tex, .bib, images here</div>
         <div className="drop-sub">o un .zip de un proyecto LaTeX</div>
       </div>
@@ -177,7 +187,9 @@ function buildTree(paths: string[]): TreeNodeT[] {
         cursor.children.push({ kind: 'file', name, path: p });
       } else {
         const subPath = segs.slice(0, i + 1).join('/');
-        let dir = cursor.children.find((c): c is TreeFolder => c.kind === 'folder' && c.name === name);
+        let dir = cursor.children.find(
+          (c): c is TreeFolder => c.kind === 'folder' && c.name === name,
+        );
         if (!dir) {
           dir = { kind: 'folder', name, path: subPath, children: [] };
           cursor.children.push(dir);
@@ -188,12 +200,10 @@ function buildTree(paths: string[]): TreeNodeT[] {
   }
   const sortNode = (n: TreeNodeT): TreeNodeT => {
     if (n.kind === 'file') return n;
-    n.children = n.children
-      .map(sortNode)
-      .sort((a, b) => {
-        if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1;
-        return a.name.localeCompare(b.name);
-      });
+    n.children = n.children.map(sortNode).sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
     return n;
   };
   sortNode(root);
@@ -213,10 +223,15 @@ function TreeNode({ node, depth }: { node: TreeNodeT; depth: number }) {
           style={{ paddingLeft: 8 + depth * 12 }}
           onClick={() => setOpen(!open)}
         >
-          <span className="tree-chev" style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>
+          <span
+            className="tree-chev"
+            style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}
+          >
             <ChevronRight size={10} />
           </span>
-          <span className="tree-icon">{open ? <FolderOpen size={14} /> : <Folder size={14} />}</span>
+          <span className="tree-icon">
+            {open ? <FolderOpen size={14} /> : <Folder size={14} />}
+          </span>
           <span className="tree-label">{node.name}</span>
         </div>
         {open && node.children.map((c) => <TreeNode key={c.path} node={c} depth={depth + 1} />)}

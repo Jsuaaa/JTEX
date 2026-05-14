@@ -57,7 +57,10 @@ export function parseTeXLog(log: string): LogParseResult {
     const warnMatch = WARN_RE.exec(trimmed);
     if (warnMatch) {
       warningCount++;
-      lines.push({ kind: 'warning', message: `${warnMatch[1]} ${warnMatch[2] ?? ''}Warning: ${warnMatch[3]}`.trim() });
+      lines.push({
+        kind: 'warning',
+        message: `${warnMatch[1]} ${warnMatch[2] ?? ''}Warning: ${warnMatch[3]}`.trim(),
+      });
       continue;
     }
 

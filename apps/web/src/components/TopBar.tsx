@@ -34,7 +34,10 @@ export function TopBar(props: TopBarProps) {
   return (
     <header className="topbar">
       <div className="brand">
-        <div className="brand-mark"><span>J</span><em>τ</em></div>
+        <div className="brand-mark">
+          <span>J</span>
+          <em>τ</em>
+        </div>
         <div className="brand-name">JTEX</div>
       </div>
 
@@ -43,19 +46,12 @@ export function TopBar(props: TopBarProps) {
         {props.activeFile && (
           <>
             <span className="crumb-sep">/</span>
-            <span className="crumb crumb-current">
-              {props.activeFile}
-            </span>
+            <span className="crumb crumb-current">{props.activeFile}</span>
           </>
         )}
       </nav>
 
       <div className="topbar-actions">
-        <button className="btn btn-ghost" title="Search (Cmd+P)" aria-label="Search">
-          <Search size={14} />
-          <span>Search</span>
-        </button>
-
         <button
           className={'auto-toggle' + (props.autoCompile ? ' is-on' : '')}
           onClick={props.onToggleAuto}
@@ -73,7 +69,6 @@ export function TopBar(props: TopBarProps) {
         >
           {props.compiling ? <span className="spinner" /> : <Play size={12} />}
           <span>{props.compiling ? 'Compiling…' : 'Recompile'}</span>
-          <kbd>⌘↵</kbd>
         </button>
 
         <div className="btn-group">

@@ -82,8 +82,17 @@
   --paper-rule: #e5e0d0;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
 body {
   font-family: var(--ui-font);
   font-size: 13px;
@@ -93,8 +102,20 @@ body {
   text-rendering: optimizeLegibility;
   overflow: hidden;
 }
-button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
-input, select, textarea { font: inherit; color: inherit; }
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
 kbd {
   font: 10.5px/1 var(--editor-font);
   padding: 2px 5px;
@@ -104,9 +125,13 @@ kbd {
   margin-left: 6px;
   border: 1px solid var(--border);
 }
-:root[data-theme='light'] kbd { background: rgba(0, 0, 0, 0.04); }
+:root[data-theme='light'] kbd {
+  background: rgba(0, 0, 0, 0.04);
+}
 
-::selection { background: color-mix(in oklch, var(--accent) 40%, transparent); }
+::selection {
+  background: color-mix(in oklch, var(--accent) 40%, transparent);
+}
 
 button:focus-visible,
 [role='button']:focus-visible,

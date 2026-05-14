@@ -2,7 +2,9 @@ import { unzip, zip, strFromU8 } from 'fflate';
 import type { FileEntry } from '../store/project';
 import { validateRelativePath, isTextPath } from '@jtex/shared';
 
-export async function unzipProject(buffer: Uint8Array): Promise<{ files: FileEntry[]; skipped: string[] }> {
+export async function unzipProject(
+  buffer: Uint8Array,
+): Promise<{ files: FileEntry[]; skipped: string[] }> {
   return new Promise((resolve, reject) => {
     unzip(buffer, (err, decoded) => {
       if (err) return reject(err);
@@ -11,9 +13,14 @@ export async function unzipProject(buffer: Uint8Array): Promise<{ files: FileEnt
       const now = Date.now();
       for (const [rawPath, bytes] of Object.entries(decoded)) {
         if (rawPath.endsWith('/')) continue;
-        const stripped = rawPath.replace(/^[^/]+\/(?=.+)/, (m) => (Object.keys(decoded).every((k) => k.startsWith(m)) ? '' : m));
+        const stripped = rawPath.replace(/^[^/]+\/(?=.+)/, (m) =>
+          Object.keys(decoded).every((k) => k.startsWith(m)) ? '' : m,
+        );
         const v = validateRelativePath(stripped);
-        if (!v.ok) { skipped.push(rawPath); continue; }
+        if (!v.ok) {
+          skipped.push(rawPath);
+          continue;
+        }
         if (isTextPath(v.path)) {
           files.push({ kind: 'text', path: v.path, content: strFromU8(bytes), updatedAt: now });
         } else {

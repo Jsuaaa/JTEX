@@ -9,8 +9,13 @@ async function getTectonicVersion(): Promise<string> {
     try {
       const proc = spawn('tectonic', ['--version'], { stdio: ['ignore', 'pipe', 'ignore'] });
       let out = '';
-      proc.stdout.on('data', (c) => { out += c.toString('utf8'); });
-      proc.on('error', () => { cachedTectonicVersion = 'not-available'; resolve(cachedTectonicVersion); });
+      proc.stdout.on('data', (c) => {
+        out += c.toString('utf8');
+      });
+      proc.on('error', () => {
+        cachedTectonicVersion = 'not-available';
+        resolve(cachedTectonicVersion);
+      });
       proc.on('close', () => {
         cachedTectonicVersion = out.trim() || 'unknown';
         resolve(cachedTectonicVersion);
