@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, unlink } from 'node:fs/promises';
 import path from 'node:path';
 
 export type CompileOutcome =
@@ -27,7 +27,16 @@ export async function compileLatex(opts: CompileOptions): Promise<CompileOutcome
     /* main file missing — compiler will produce the right error */
   }
 
-  const strategy = decideStrategy(entryContent, engine, entryFile);
+  const includedContent = await readIncludedFiles(jobDir, entryFile, entryContent);
+  const strategy = decideStrategy(entryContent + '\n' + includedContent, engine, entryFile);
+
+  const pdfPath = path.join(jobDir, replaceExt(entryFile, '.pdf'));
+  const logPath = path.join(jobDir, replaceExt(entryFile, '.log'));
+
+  // Drop any stale PDF/log shipped inside the project archive: without this,
+  // a compiler failure would silently surface the *previous* PDF as success.
+  await unlink(pdfPath).catch(() => undefined);
+  await unlink(logPath).catch(() => undefined);
 
   let stdout = '';
   let stderr = '';
@@ -57,8 +66,6 @@ export async function compileLatex(opts: CompileOptions): Promise<CompileOutcome
   });
 
   const durationMs = Date.now() - start;
-  const pdfPath = path.join(jobDir, replaceExt(entryFile, '.pdf'));
-  const logPath = path.join(jobDir, replaceExt(entryFile, '.log'));
 
   let logFromFile = '';
   try { logFromFile = await readFile(logPath, 'utf8'); } catch { /* may not exist */ }
@@ -142,4 +149,29 @@ function decideStrategy(content: string, requestedEngine: CompileOptions['engine
 function replaceExt(filename: string, newExt: string): string {
   const idx = filename.lastIndexOf('.');
   return idx === -1 ? filename + newExt : filename.slice(0, idx) + newExt;
+}
+
+// One-level read of \input{}/\include{} targets so engine detection
+// (biblatex/fontspec/etc.) sees the preamble when it lives in a sub-file.
+async function readIncludedFiles(jobDir: string, entryFile: string, entryContent: string): Promise<string> {
+  if (!entryContent) return '';
+  const re = /\\(?:input|include)\s*\{([^}]+)\}/g;
+  const baseDir = path.dirname(path.join(jobDir, entryFile));
+  const jobRoot = path.resolve(jobDir);
+  const seen = new Set<string>();
+  let combined = '';
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(entryContent)) !== null) {
+    let rel = (m[1] ?? '').trim();
+    if (!rel) continue;
+    if (!/\.[a-zA-Z]+$/.test(rel)) rel += '.tex';
+    if (seen.has(rel)) continue;
+    seen.add(rel);
+    const resolved = path.resolve(baseDir, rel);
+    if (resolved !== jobRoot && !resolved.startsWith(jobRoot + path.sep)) continue;
+    try {
+      combined += '\n' + (await readFile(resolved, 'utf8'));
+    } catch { /* missing — compiler will produce the right error */ }
+  }
+  return combined;
 }

@@ -48,8 +48,13 @@ ARG TECTONIC_VERSION=0.15.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg xz-utils fontconfig dumb-init \
         texlive-latex-base texlive-latex-recommended \
-        texlive-fonts-recommended texlive-latex-extra \
-        texlive-bibtex-extra biber latexmk \
+        texlive-fonts-recommended texlive-fonts-extra \
+        texlive-latex-extra texlive-bibtex-extra \
+        texlive-plain-generic \
+        texlive-lang-spanish texlive-lang-english \
+        texlive-science texlive-pictures \
+        texlive-xetex texlive-luatex \
+        biber latexmk \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
